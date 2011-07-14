@@ -7,12 +7,14 @@
 
 import ConfigParser
 
-ID_SITE = 1
+ID_SITE = ""
 SITE_BASE_URL   = ""
 GOOGLE_TABLE_ID = ""
 MYSQL_CREDENTIALS = {}
 GOOGLE_USER = ""
 GOOGLE_PASS = ""
+CONFIG_START = ""
+CONFIG_END = ""
 
 def read_config(config_file):
     global ID_SITE, SITE_BASE_URL, GOOGLE_TABLE_ID
@@ -22,7 +24,6 @@ def read_config(config_file):
     conf = ConfigParser.RawConfigParser()
     if len(conf.read(config_file)) == 0:
         raise Exception("Configuration file not found")
-    
     ID_SITE = conf.get("piwik", "site_id")
     SITE_BASE_URL = conf.get("piwik", "site_url")
     
@@ -33,3 +34,33 @@ def read_config(config_file):
     CONFIG_END  = conf.get("export", "end")
     
     MYSQL_CREDENTIALS = dict(conf.items("mysql"))
+
+def write_config(config_file):
+    global ID_SITE, SITE_BASE_URL, GOOGLE_TABLE_ID
+    global MYSQL_CREDENTIALS, GOOGLE_USER, GOOGLE_PASS
+    global CONFIG_START, CONFIG_END
+    
+    conf = ConfigParser.RawConfigParser()
+    conf.add_section("google")
+    conf.set("google", "user_login", GOOGLE_USER)
+    conf.set("google", "user_pass", GOOGLE_PASS)
+    conf.set("google", "table_id", GOOGLE_TABLE_ID)
+    
+    conf.add_section("mysql")
+    conf.set("mysql", "db", MYSQL_CREDENTIALS["db"])
+    conf.set("mysql", "host", MYSQL_CREDENTIALS["host"])
+    conf.set("mysql", "port", MYSQL_CREDENTIALS["port"])
+    conf.set("mysql", "user", MYSQL_CREDENTIALS["user"])
+    conf.set("mysql", "passwd", MYSQL_CREDENTIALS["passwd"])
+    conf.set("mysql", "table_prefix", MYSQL_CREDENTIALS["table_prefix"])
+    
+    conf.add_section("export")
+    conf.set("export", "start", CONFIG_START)
+    conf.set("export", "end", CONFIG_END)
+    
+    conf.add_section("piwik")
+    conf.set("piwik", "site_id", ID_SITE)
+    conf.set("piwik", "site_url", SITE_BASE_URL)
+    
+    with open(config_file, "w") as fconf:
+        conf.write(fconf)

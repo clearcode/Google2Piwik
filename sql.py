@@ -94,6 +94,18 @@ def init_db(mysql_data):
         print "Exception: ", e
         exit()
 
+def test_db(mysql_data):
+	global db, cursor
+	db = MySQLdb.connect(mysql_data["host"], mysql_data["user"], mysql_data["passwd"],
+                             mysql_data["db"], int(mysql_data["port"]))
+	db.set_character_set('utf8')
+	cursor = db.cursor()
+	
+def get_sites(prefix):
+    select_site_sql = "SELECT idsite, name, main_url from {SITE_TABLE}".format(SITE_TABLE = prefix+"_"+T_SITE)
+    cursor.execute(select_site_sql)
+    return [{"id" : id, "name" : name, "url" : url} for (id, name, url) in cursor.fetchall()]
+    
 def check_tables(table_prefix):
     global cursor
     failed = []

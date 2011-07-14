@@ -15,6 +15,7 @@ Requirements
 - Python 2.6 with components:
 	- gdata-python-client (Google Python API) - http://code.google.com/p/gdata-python-client/
         - MySQLdb
+        - PyQt4 (http://www.riverbankcomputing.co.uk/software/pyqt/download) --gui version only
 
 Preparation
 ===========
@@ -50,6 +51,21 @@ for one exported day, plus 3 for whole period. However number of requests depend
 This means that you should be able to export about 2000 days per 24h in low and medium visited sites.
 (Read more @ http://code.google.com/intl/pl/apis/analytics/docs/gdata/gdataDeveloperGuide.html#quota)
 
+Running GUI
+===========
+$ cd Google2Piwik
+$ python google2piwikgui.py
+
+Building binaries
+=================
+- Make sure you have all the requirements, including PyQt4
+- Get pyinstaller (http://www.pyinstaller.org/)
+- Run:
+$ python /path/to/pyinstaller/Configure.py
+$ python /path/to/pyinstaller/Makespec.py --onefile Google2Piwik/google2piwikgui.py
+$ python /path/to/pyinstaller/Build.py google2piwikgui.spec
+- Copy Google2Piwik/lib/* to dist/lib/*
+
 Contact
 =======
 Copyright (C) 2011 by Clearcode (http://clearcode.cc)
@@ -57,5 +73,6 @@ Copyright (C) 2011 by Clearcode (http://clearcode.cc)
 Development Team:
 Daniel Borzęcki
 Maciej Zawadziński
+Piotr Rzepecki
 
 Contact: office@clearcode.cc

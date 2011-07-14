@@ -522,6 +522,11 @@ class GoogleFeedFetcher(object):
         for entry in table_feed.entry:
             print "Site: %30s \t table_id: %s" % (entry.title.text, entry.table_id.text)
   
+    def GetTableIDs(self):
+        account_query = gdata.analytics.client.AccountFeedQuery()
+        table_feed = self.client.GetAccountFeed(account_query)
+        return [(entry.title.text,entry.table_id.text) for entry in table_feed.entry]
+
     def EntryToDict(self, entry, take_dimension = True, take_metric = False):
         result = {}
         if take_dimension:
