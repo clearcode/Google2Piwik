@@ -56,6 +56,9 @@ class GAWizardPage(QtGui.QWizardPage):
         self.ga_password_field = QtGui.QLineEdit(config.GOOGLE_PASS)
         self.ga_password_field.setEchoMode(QtGui.QLineEdit.Password)
         form.addRow(QtGui.QLabel("Password"), self.ga_password_field)
+        self.ga_api_key_field = QtGui.QLineEdit(config.GOOGLE_KEY)
+        form.addRow(QtGui.QLabel("Api Key"), self.ga_api_key_field)
+        
         self.registerField("ga_user", self.ga_user_field)
         self.registerField("ga_password", self.ga_password_field)
         self.setLayout(form)

@@ -13,12 +13,13 @@ GOOGLE_TABLE_ID = ""
 MYSQL_CREDENTIALS = {}
 GOOGLE_USER = ""
 GOOGLE_PASS = ""
+GOOGLE_KEY = ""
 CONFIG_START = ""
 CONFIG_END = ""
 
 def read_config(config_file):
     global ID_SITE, SITE_BASE_URL, GOOGLE_TABLE_ID
-    global MYSQL_CREDENTIALS, GOOGLE_USER, GOOGLE_PASS
+    global MYSQL_CREDENTIALS, GOOGLE_USER, GOOGLE_PASS, GOOGLE_KEY
     global CONFIG_START, CONFIG_END
 
     conf = ConfigParser.RawConfigParser()
@@ -30,6 +31,7 @@ def read_config(config_file):
     GOOGLE_TABLE_ID = conf.get("google", "table_id")
     GOOGLE_USER = conf.get("google", "user_login")
     GOOGLE_PASS = conf.get("google", "user_pass")
+    GOOGLE_KEY = conf.get("google", "api_key")
     CONFIG_START= conf.get("export", "start")
     CONFIG_END  = conf.get("export", "end")
     
@@ -45,6 +47,7 @@ def write_config(config_file):
     conf.set("google", "user_login", GOOGLE_USER)
     conf.set("google", "user_pass", GOOGLE_PASS)
     conf.set("google", "table_id", GOOGLE_TABLE_ID)
+    conf.set("google", "api_key", GOOGLE_KEY)
     
     conf.add_section("mysql")
     conf.set("mysql", "db", MYSQL_CREDENTIALS["db"])

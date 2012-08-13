@@ -119,6 +119,9 @@ def export_day(day, fetcher):
     VERBOSE("VISIT: Fetch 3", 2)
     simulator.update(fetcher, "ga:longitude,ga:latitude,ga:hour,ga:browserVersion,ga:keyword,ga:source,ga:operatingSystemVersion","ga:visits")
     
+    VERBOSE("VISIT: Fetch 4", 2)
+    simulator.update(fetcher, "ga:longitude,ga:latitude,ga:hour,ga:visitCount,ga:daysSinceLastVisit","ga:visits")
+
     """
     Getting landing and exit pages
     """
@@ -234,7 +237,7 @@ class Visit(object):
         """
         self.visit_log.update(additional)
         
-        stable = ["ga:screenResolution", "ga:language", "ga:visitLength", "total_actions"]
+        stable = ["ga:screenResolution", "ga:language", "ga:visitLength", "total_actions", "ga:visitCount", "ga:daysSinceLastVisit"]
         for stable_dim in stable:
             self.visit_log[dims.DMAP[stable_dim]] = self.google_data.get(stable_dim) or 0
 
@@ -474,8 +477,8 @@ class GoogleFeedFetcher(object):
                             'end-date': day_end,
                             'dimensions': dimensions, 
                             'metrics': metrics,
-                            'max-results': '10000'})
-
+                            'max-results': '10000',
+                            'key': config.GOOGLE_KEY})
         self.feed = self.client.GetDataFeed(data_query)
 
     def FeedFetch(self, dimensions, metrics, day):
@@ -485,7 +488,8 @@ class GoogleFeedFetcher(object):
                             'end-date': day,
                             'dimensions': dimensions, 
                             'metrics': metrics,
-                            'max-results': '10000'})
+                            'max-results': '10000',
+                            'key': config.GOOGLE_KEY})
         self.feed = self.client.GetDataFeed(data_query)
 
     def getUniqueVisitors(self, day):
@@ -516,11 +520,15 @@ class GoogleFeedFetcher(object):
         return result
 
     def PrintTableIDs(self):
-        account_query = gdata.analytics.client.AccountFeedQuery()
-        table_feed = self.client.GetAccountFeed(account_query)
+        #account_query = gdata.analytics.client.AccountFeedQuery()
+        #table_feed = self.client.GetAccountFeed(account_query)
+        account_query = gdata.analytics.client.ProfileQuery('~all', '~all',
+                                                    {'key': config.GOOGLE_KEY})
+        table_feed = self.client.GetManagementFeed(account_query)
         print "Google Analytics Table IDs for your Account\n"
         for entry in table_feed.entry:
-            print "Site: %30s \t table_id: %s" % (entry.title.text, entry.table_id.text)
+            print "Site: %30s \t table_id: %s" % (entry.GetProperty('ga:profileName').value,
+                                                    entry.GetProperty('dxp:tableId').value)
   
     def GetTableIDs(self):
         account_query = gdata.analytics.client.AccountFeedQuery()
@@ -558,6 +566,8 @@ if __name__ == '__main__':
                     help="updates visit total actions field (for some cases needed after export)")
     parser.add_option("-p", "--print-table-ids", dest="print_table_id", default=False, action="store_true", 
                     help="prints table_id for every site on your Google Analytics Account")
+    parser.add_option("-C", "--clear-archives", dest="clear_archives", default=False, action="store_true", 
+                    help="Drops all archive tables in piwik database")
     (options, args) = parser.parse_args(sys.argv)
 
     __VERBOSE__ = options.verbose
@@ -568,6 +578,18 @@ if __name__ == '__main__':
         fetcher.PrintTableIDs()
         exit()
         
+    if options.clear_archives:
+        try:
+            config.read_config(options.config_file)
+            sql.initialize(config.MYSQL_CREDENTIALS)
+        except:
+            "Please check your config file and run your script again"
+            exit()
+        print "Clearing archive tables"
+        sql.clear_archives()
+        print "Please go to your Piwik installation folder and run misc/cron/archive.sh script."
+        exit()
+
     if options.check:
         print "Checking configuration file:",
         try:
@@ -579,9 +601,9 @@ if __name__ == '__main__':
         print 
         print "Checking Google Analytics"
         
-        if not config.GOOGLE_USER.split("@")[1] == "gmail.com":
-            print "Your e-mail address should be ending with @gmail.com"
-            exit()
+        #if not config.GOOGLE_USER.split("@")[1] == "gmail.com":
+            #print "Your e-mail address should be ending with @gmail.com"
+            #exit()
         
         print "Attempting login:",
         try:
@@ -639,3 +661,6 @@ if __name__ == '__main__':
         sql.update_site_ts_created(config.ID_SITE, start_date)
 
         export_period(start_date, end_date)
+        
+        sql.clear_archives()
+        print "Please go to your Piwik installation folder and run misc/cron/archive.sh script."

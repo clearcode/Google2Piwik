@@ -5,6 +5,7 @@
 user_login = user
 user_pass  = password
 table_id   = ga:XXXXXXXX
+api_key    = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 # MySQL Piwik Database configuration
 [mysql]

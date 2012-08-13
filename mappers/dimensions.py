@@ -25,10 +25,12 @@ DMAP =             {"ga:browser" : "config_browser_name",
                     "ga:landingPagePath" : "visit_entry_idaction_url",
                     "ga:source" : "referer_url",
                     "ga:keyword" : "referer_keyword",
-                    
+                    "ga:visitCount" : "visitor_count_visits",
+                    "ga:daysSinceLastVisit" : "visitor_days_since_last",
+
                     "referer_type" : "referer_type",
                     "referer_name" : "referer_name",
-                    
+
                     "visit_server_date" : "visit_server_date",
                     "total_actions" : "visit_total_actions",
                     "md5config" : "config_md5config",

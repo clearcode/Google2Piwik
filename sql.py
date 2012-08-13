@@ -21,7 +21,7 @@ T_SITE  = "site"
 INSERT_LOG_VISIT_ACTION = """INSERT INTO {{LVA}} (idvisit, idvisitor, server_time, idsite, idaction_url, 
                                                   idaction_url_ref, idaction_name, time_spent_ref_action, idaction_name_ref)
                                           VALUES (%s, binary(unhex(substring(%s,1,16))), %s, %s, %s, %s, %s, %s, 0) """
-                                                                                                      
+  
 INSERT_LOG_ACTION =    "INSERT INTO {{LA}} (name, hash, type) VALUES (%s, %s, %s) "
 
 INSERT_LOG_VISIT  = u""" INSERT INTO {{LV}} (idsite, visitor_localtime, idvisitor, visitor_returning, config_id,
@@ -45,7 +45,7 @@ INSERT_LOG_VISIT  = u""" INSERT INTO {{LV}} (idsite, visitor_localtime, idvisito
                                                %(config_browser_version)s, %(config_resolution)s, 0, %(config_flash)s,
                                                %(config_java)s, 0, 0, 0, 0, 0, 0, 0, 0,
                                                %(location_browser_lang)s, %(location_country)s, %(location_continent)s,
-                                               0, 0, 0, 0, 0) """
+                                               %(visitor_count_visits)s, %(visitor_days_since_last)s, 0, 0, 0) """
 
 SELECT_NB_VISITS = "SELECT count(*) FROM {{LV}} WHERE visitor_localtime = %s and idsite = %s"
 
@@ -166,3 +166,15 @@ def update_total_visit_actions():
                     SET lv.visit_total_actions = m.visit_actions
                 """.format(LV = T_LOGV, LVA = T_LOGVA)
     cursor.execute(raw_sql)
+
+def clear_archives():
+    query = cursor.execute('SHOW TABLES')
+    tables = cursor.fetchall()
+    to_drop = []
+    for col in tables:
+        if 'archive' in col[0]:
+            to_drop.append(col[0])
+    if to_drop:
+        raw_sql = 'DROP TABLE ' + (', ').join(to_drop)
+        cursor.execute(raw_sql)
+    
