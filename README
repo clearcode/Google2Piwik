@@ -70,7 +70,7 @@ $ python /path/to/pyinstaller/Build.py google2piwikgui.spec
 
 Contact
 =======
-Copyright (C) 2011 by Clearcode (http://clearcode.cc)
+Developed & maintained by Clearcode (http://clearcode.cc)
 
 Development Team:
 Daniel Borzęcki
@@ -79,3 +79,7 @@ Piotr Rzepecki
 Maciej Sobczak
 
 Contact: office@clearcode.cc
+
+License
+=======
+http://www.gnu.org/licenses/gpl-3.0.html GPL v3 or later
