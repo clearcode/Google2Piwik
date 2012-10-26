@@ -30,6 +30,7 @@ import sys
 
 __VERBOSE__ = 0
 SOURCE_APP_NAME = "Google2Piwik Exporter"
+CURRENT_VERSION = 1.9
 
 def VERBOSE(message,level=0, new_line=True):
     if __VERBOSE__ >= level: sys.stdout.write(message + '\n' if new_line else '')
@@ -112,15 +113,9 @@ def export_day(day, fetcher):
     VERBOSE("VISIT: Initialize", 2)
     simulator.initialize(fetcher, "ga:latitude,ga:longitude,ga:hour,ga:flashVersion,ga:javaEnabled,ga:language,ga:screenResolution", "ga:visits")
 
-    VERBOSE("VISIT: Fetch 1", 2)
-    simulator.update(fetcher, "ga:latitude,ga:longitude,ga:visitLength,ga:hour,ga:visitorType,ga:operatingSystem,ga:operatingSystemVersion","ga:visits")       
-    VERBOSE("VISIT: Fetch 2", 2)
-    simulator.update(fetcher, "ga:latitude,ga:longitude,ga:hour,ga:browser,ga:browserVersion,ga:country,ga:continent","ga:visits")
-    VERBOSE("VISIT: Fetch 3", 2)
-    simulator.update(fetcher, "ga:longitude,ga:latitude,ga:hour,ga:browserVersion,ga:keyword,ga:source,ga:operatingSystemVersion","ga:visits")
-    
-    VERBOSE("VISIT: Fetch 4", 2)
-    simulator.update(fetcher, "ga:longitude,ga:latitude,ga:hour,ga:visitCount,ga:daysSinceLastVisit","ga:visits")
+    for i, d in enumerate(dims.DVALS[CURRENT_VERSION]):
+        VERBOSE("VISIT: Fetch " + str(i), 2)
+        simulator.update(fetcher, d, "ga:visits")
 
     """
     Getting landing and exit pages
@@ -139,7 +134,7 @@ def export_day(day, fetcher):
     """
     VERBOSE("VISIT: Export vitis", 2)
     for v in simulator.visits:
-        v.idvisit = sql.insert_log_visit(v.visit_log)
+        v.idvisit = sql.insert_log_visit(v.visit_log, CURRENT_VERSION)
     VERBOSE("VISIT: Completed", 2)
     
     """
@@ -237,7 +232,7 @@ class Visit(object):
         """
         self.visit_log.update(additional)
         
-        stable = ["ga:screenResolution", "ga:language", "ga:visitLength", "total_actions", "ga:visitCount", "ga:daysSinceLastVisit"]
+        stable = ["ga:screenResolution", "ga:language", "ga:visitLength", "total_actions", "ga:visitCount", "ga:daysSinceLastVisit", "ga:city"]
         for stable_dim in stable:
             self.visit_log[dims.DMAP[stable_dim]] = self.google_data.get(stable_dim) or 0
 
@@ -246,22 +241,23 @@ class Visit(object):
         self.set_final("ga:javaEnabled", vals.java_present)
         self.set_final("ga:hour", vals.visitor_localtime)
         self.set_final("ga:browser", vals.browser_name)
-        self.set_final("ga:continent", vals.continent_name)
         self.set_final("ga:country", vals.country_name)
         self.set_final("ga:keyword", vals.referer_keyword)
         self.cut_final("ga:keyword", 255)
         self.set_final("ga:source", vals.referer_url)
+        self.set_final("ga:continent", vals.continent_name)
+        self.set_final("ga:region", vals.region_name)
         
         self.set_final_value("referer_type", vals.referer_type(self.google_data.get("ga:source"), 
                                                                self.get_final_value("ga:keyword")))
         
         self.set_final_value("referer_name", vals.referer_name(self.google_data.get("ga:source"),
                                                                self.get_final_value("referer_type")))
-	self.cut_final("referer_name", 70)
+        self.cut_final("referer_name", 70)
                 
         self.set_final_value("ga:browserVersion", vals.browser_version(self.get_final_value("ga:browser"),
                                                   self.google_data.get("ga:browserVersion")))
-	self.cut_final("ga:browserVersion", 20)
+        self.cut_final("ga:browserVersion", 20)
 
         try:
             landing_act_id = action_manager[self.google_data["ga:landingPagePath"]].id_action_url
@@ -520,8 +516,6 @@ class GoogleFeedFetcher(object):
         return result
 
     def PrintTableIDs(self):
-        #account_query = gdata.analytics.client.AccountFeedQuery()
-        #table_feed = self.client.GetAccountFeed(account_query)
         account_query = gdata.analytics.client.ProfileQuery('~all', '~all',
                                                     {'key': config.GOOGLE_KEY})
         table_feed = self.client.GetManagementFeed(account_query)
@@ -531,9 +525,10 @@ class GoogleFeedFetcher(object):
                                                     entry.GetProperty('dxp:tableId').value)
   
     def GetTableIDs(self):
-        account_query = gdata.analytics.client.AccountFeedQuery()
-        table_feed = self.client.GetAccountFeed(account_query)
-        return [(entry.title.text,entry.table_id.text) for entry in table_feed.entry]
+        account_query = gdata.analytics.client.ProfileQuery('~all', '~all',
+                                                    {'key': config.GOOGLE_KEY})
+        table_feed = self.client.GetManagementFeed(account_query)
+        return [(entry.GetProperty('ga:profileName').value, entry.GetProperty('dxp:tableId').value) for entry in table_feed.entry]
 
     def EntryToDict(self, entry, take_dimension = True, take_metric = False):
         result = {}
@@ -577,7 +572,7 @@ if __name__ == '__main__':
         fetcher = GoogleFeedFetcher("")
         fetcher.PrintTableIDs()
         exit()
-        
+
     if options.clear_archives:
         try:
             config.read_config(options.config_file)
@@ -600,19 +595,19 @@ if __name__ == '__main__':
             exit()
         print 
         print "Checking Google Analytics"
-        
+
         #if not config.GOOGLE_USER.split("@")[1] == "gmail.com":
             #print "Your e-mail address should be ending with @gmail.com"
             #exit()
-        
+
         print "Attempting login:",
         try:
             fetcher = GoogleFeedFetcher( config.GOOGLE_TABLE_ID )
             print "[OK]"
         except:
             print "[FAILED]"
-            
-        
+
+
         print "Simple query on table:",
         try:
             fetcher.checkAccess()
@@ -621,8 +616,8 @@ if __name__ == '__main__':
             print "[OK]"
         except:
             print "[FAILED]"
-                    
-        print     
+
+        print
         print "Checking MySQL Access"
         print "Initialize database connection:",
         try:
@@ -654,6 +649,10 @@ if __name__ == '__main__':
         start_date = read_date(options.start_date or config.CONFIG_START)
         end_date = None if not (options.end_date or config.CONFIG_END) else read_date(options.end_date or config.CONFIG_END)
         sql.initialize(config.MYSQL_CREDENTIALS)
+        CURRENT_VERSION = sql.get_version(config.MYSQL_CREDENTIALS["table_prefix"])
+        if (CURRENT_VERSION < 1.9):
+            CURRENT_VERSION = 1.8
+
         if options.update_visit_actions:
             sql.update_total_visit_actions()
             exit()

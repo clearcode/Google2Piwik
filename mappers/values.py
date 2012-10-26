@@ -8,6 +8,7 @@
 import cPickle
 
 country_codes = cPickle.load( open("lib/countrycodes.pickle") )
+region_codes = cPickle.load( open("lib/regioncodes.pickle") )
 unknown = "UNK"
 
 REFERER_TYPE_DIRECT_ENTRY = 1
@@ -128,4 +129,8 @@ def flash_present(value):
 def java_present(value):
     return int(value == "Yes")
 
-    
+def region_name(value):
+    try:
+        return region_codes[value]
+    except KeyError:
+        return 'xx'

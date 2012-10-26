@@ -13,6 +13,8 @@ DMAP =             {"ga:browser" : "config_browser_name",
                     "ga:browserVersion" : "config_browser_version",
                     "ga:continent" : "location_continent",
                     "ga:country" : "location_country",
+                    "ga:city" : "location_city",
+                    "ga:region" : "location_region",
                     "ga:flashVersion" : "config_flash",
                     "ga:javaEnabled" : "config_java",
                     "ga:screenResolution": "config_resolution",
@@ -35,4 +37,17 @@ DMAP =             {"ga:browser" : "config_browser_name",
                     "total_actions" : "visit_total_actions",
                     "md5config" : "config_md5config",
                     "idcookie" : "visitor_idcookie"
+                    }
+
+DVALS =              {
+                    1.9: ["ga:latitude,ga:longitude,ga:visitLength,ga:hour,ga:visitorType,ga:operatingSystem,ga:operatingSystemVersion",
+                         "ga:longitude,ga:latitude,ga:hour,ga:browserVersion,ga:keyword,ga:source,ga:operatingSystemVersion",
+                         "ga:latitude,ga:longitude,ga:hour,ga:browser,ga:browserVersion,ga:country,ga:city",
+                         "ga:longitude,ga:latitude,ga:hour,ga:visitCount,ga:daysSinceLastVisit,ga:region"
+                         ],
+                    1.8: ["ga:latitude,ga:longitude,ga:visitLength,ga:hour,ga:visitorType,ga:operatingSystem,ga:operatingSystemVersion",
+                         "ga:longitude,ga:latitude,ga:hour,ga:browserVersion,ga:keyword,ga:source,ga:operatingSystemVersion",
+                         "ga:latitude,ga:longitude,ga:hour,ga:browser,ga:browserVersion,ga:country,ga:continent",
+                         "ga:longitude,ga:latitude,ga:hour,ga:visitCount,ga:daysSinceLastVisit"
+                         ]
                     }

@@ -1,4 +1,4 @@
-Google2Piwik Exporter, version 1.3, August 2012
+Google2Piwik Exporter, version 1.4, October 2012
 
 Description
 ===========
@@ -14,15 +14,15 @@ Requirements
   However you can grant privileges to your Gmail account, and use it to perform the export.
 - Goggle APIs API key (here you can get one: https://code.google.com/apis/console/)
 - Python 2.6 with components:
-	- gdata-python-client (Google Python API) - http://code.google.com/p/gdata-python-client/
-        - MySQLdb
-        - PyQt4 (http://www.riverbankcomputing.co.uk/software/pyqt/download) --gui version only
+  - gdata-python-client (Google Python API) - http://code.google.com/p/gdata-python-client/
+  - MySQLdb
+  - PyQt4 (http://www.riverbankcomputing.co.uk/software/pyqt/download) --gui version only
 
 Preparation
 ===========
 Before running the script please be sure to:
 - Prepare `google2piwik.conf` configuration file - sample in  google2piwik.conf.sample
-- If you don't know your site table_id, type:	python google2piwik.py -p
+- If you don't know your site table_id, type: python google2piwik.py -p
   (remember to fill google login and pass configuration before)
 - Check if configuration file is acceptable and all rights are present (./google2piwik.py -c)
 - Create backup of your Piwik MySQL Database
@@ -77,6 +77,7 @@ Daniel Borzęcki
 Maciej Zawadziński
 Piotr Rzepecki
 Maciej Sobczak
+Grzegorz Janik
 
 Contact: office@clearcode.cc
 

@@ -18,34 +18,38 @@ T_LOGA  = "log_action"
 T_LOGV  = "log_visit"
 T_SITE  = "site"
 
-INSERT_LOG_VISIT_ACTION = """INSERT INTO {{LVA}} (idvisit, idvisitor, server_time, idsite, idaction_url, 
+INSERT_LOG_VISIT_ACTION = """INSERT INTO {{LVA}} (idvisit, idvisitor, server_time, idsite, idaction_url,
                                                   idaction_url_ref, idaction_name, time_spent_ref_action, idaction_name_ref)
                                           VALUES (%s, binary(unhex(substring(%s,1,16))), %s, %s, %s, %s, %s, %s, 0) """
-  
-INSERT_LOG_ACTION =    "INSERT INTO {{LA}} (name, hash, type) VALUES (%s, %s, %s) "
 
-INSERT_LOG_VISIT  = u""" INSERT INTO {{LV}} (idsite, visitor_localtime, idvisitor, visitor_returning, config_id,
-                                               visit_first_action_time, visit_last_action_time,
-                                               visit_exit_idaction_url, visit_entry_idaction_url, visit_total_actions,
-                                               visit_total_time, referer_type, referer_name, visit_goal_converted,
-                                               referer_url, referer_keyword, config_os, config_browser_name,
-                                               config_browser_version, config_resolution, config_pdf, config_flash,
-                                               config_java, config_director, config_quicktime, config_realplayer,
-                                               config_windowsmedia, config_gears, config_silverlight, config_cookie,
-                                               location_ip, location_browser_lang, location_country, location_continent,
-                                               visitor_count_visits, visitor_days_since_last, visitor_days_since_first,
-                                               visit_exit_idaction_name, visit_entry_idaction_name)
-                                               
-                                    VALUES   ( %(idsite)s, %(visitor_localtime)s, binary(unhex(substring(%(visitor_idcookie)s,1,16))),
-                                               %(visitor_returning)s, binary(unhex(substring(%(config_md5config)s,1,16))),
-                                               %(visit_first_action_time)s, %(visit_last_action_time)s,
-                                               %(visit_exit_idaction_url)s, %(visit_entry_idaction_url)s, %(visit_total_actions)s,
-                                               %(visit_total_time)s, %(referer_type)s, %(referer_name)s, 0,
-                                               %(referer_url)s, %(referer_keyword)s, %(config_os)s, %(config_browser_name)s,
-                                               %(config_browser_version)s, %(config_resolution)s, 0, %(config_flash)s,
-                                               %(config_java)s, 0, 0, 0, 0, 0, 0, 0, 0,
-                                               %(location_browser_lang)s, %(location_country)s, %(location_continent)s,
-                                               %(visitor_count_visits)s, %(visitor_days_since_last)s, 0, 0, 0) """
+INSERT_LOG_ACTION =    "INSERT INTO {{LA}} (name, hash, type) VALUES (%s, %s, %s) "
+LOGV_TEMPLATE = u""" INSERT INTO {{LV}} (idsite, visitor_localtime, idvisitor, visitor_returning, config_id,
+                                                   visit_first_action_time, visit_last_action_time,
+                                                   visit_exit_idaction_url, visit_entry_idaction_url, visit_total_actions,
+                                                   visit_total_time, referer_type, referer_name, visit_goal_converted,
+                                                   referer_url, referer_keyword, config_os, config_browser_name,
+                                                   config_browser_version, config_resolution, config_pdf, config_flash,
+                                                   config_java, config_director, config_quicktime, config_realplayer,
+                                                   config_windowsmedia, config_gears, config_silverlight, config_cookie,
+                                                   location_ip, location_browser_lang, location_country{0},
+                                                   visitor_count_visits, visitor_days_since_last, visitor_days_since_first,
+                                                   visit_exit_idaction_name, visit_entry_idaction_name{1})
+
+                                        VALUES   ( %(idsite)s, %(visitor_localtime)s, binary(unhex(substring(%(visitor_idcookie)s,1,16))),
+                                                   %(visitor_returning)s, binary(unhex(substring(%(config_md5config)s,1,16))),
+                                                   %(visit_first_action_time)s, %(visit_last_action_time)s,
+                                                   %(visit_exit_idaction_url)s, %(visit_entry_idaction_url)s, %(visit_total_actions)s,
+                                                   %(visit_total_time)s, %(referer_type)s, %(referer_name)s, 0,
+                                                   %(referer_url)s, %(referer_keyword)s, %(config_os)s, %(config_browser_name)s,
+                                                   %(config_browser_version)s, %(config_resolution)s, 0, %(config_flash)s,
+                                                   %(config_java)s, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                   %(location_browser_lang)s, %(location_country)s{2},
+                                                   %(visitor_count_visits)s, %(visitor_days_since_last)s, 0, 0, 0{3}) """
+
+INSERT_LOG_VISIT = {
+    1.9: (", location_city", ", location_region", ", %(location_city)s", ", %(location_region)s"),
+    1.8: (", location_continent", "", ", %(location_continent)s", "")
+}
 
 SELECT_NB_VISITS = "SELECT count(*) FROM {{LV}} WHERE visitor_localtime = %s and idsite = %s"
 
@@ -54,17 +58,21 @@ def initialize(mysql_data):
     global db, cursor
     global INSERT_LOG_VISIT_ACTION, INSERT_LOG_ACTION, INSERT_LOG_VISIT
     global SELECT_NB_VISITS
+    global LOGV_TEMPLATE
     prefix = mysql_data["table_prefix"]
     T_LOGVA = "%s_%s" % (prefix, T_LOGVA) if prefix else T_LOGVA
     T_LOGA  = "%s_%s" % (prefix, T_LOGA) if prefix else T_LOGA
     T_LOGV  = "%s_%s" % (prefix, T_LOGV) if prefix else T_LOGV
     T_SITE  = "%s_%s" % (prefix, T_SITE) if prefix else T_SITE
-    
+
     INSERT_LOG_VISIT_ACTION = INSERT_LOG_VISIT_ACTION.replace("{{LVA}}", T_LOGVA)
     INSERT_LOG_ACTION       = INSERT_LOG_ACTION.replace("{{LA}}", T_LOGA)
-    INSERT_LOG_VISIT        = INSERT_LOG_VISIT.replace("{{LV}}", T_LOGV)
     SELECT_NB_VISITS        = SELECT_NB_VISITS.replace("{{LV}}", T_LOGV)
-    
+
+    LOGV_TEMPLATE = LOGV_TEMPLATE.replace("{{LV}}", T_LOGV)
+    for k, v in INSERT_LOG_VISIT.iteritems():
+        INSERT_LOG_VISIT[k] = LOGV_TEMPLATE.format(*INSERT_LOG_VISIT[k])
+
     db = init_db(mysql_data)
     db.set_character_set('utf8')
     cursor = db.cursor()
@@ -72,10 +80,10 @@ def initialize(mysql_data):
 def insert_log_action(values):
     cursor.execute(INSERT_LOG_ACTION, values)
     return cursor.lastrowid
-    
-def insert_log_visit(values):
+
+def insert_log_visit(values, version):
     try:
-        cursor.execute(INSERT_LOG_VISIT, values)
+        cursor.execute(INSERT_LOG_VISIT[version], values)
     except:
         pass
     return cursor.lastrowid
@@ -95,17 +103,24 @@ def init_db(mysql_data):
         exit()
 
 def test_db(mysql_data):
-	global db, cursor
-	db = MySQLdb.connect(mysql_data["host"], mysql_data["user"], mysql_data["passwd"],
+    global db, cursor
+    db = MySQLdb.connect(mysql_data["host"], mysql_data["user"], mysql_data["passwd"],
                              mysql_data["db"], int(mysql_data["port"]))
-	db.set_character_set('utf8')
-	cursor = db.cursor()
-	
+    db.set_character_set('utf8')
+    cursor = db.cursor()
+
 def get_sites(prefix):
     select_site_sql = "SELECT idsite, name, main_url from {SITE_TABLE}".format(SITE_TABLE = prefix+"_"+T_SITE)
     cursor.execute(select_site_sql)
     return [{"id" : id, "name" : name, "url" : url} for (id, name, url) in cursor.fetchall()]
-    
+
+def get_version(prefix):
+    t_option = "%s_option" % (prefix) if prefix else "option"
+    select_version_sql = "SELECT option_value FROM {table} WHERE option_name = 'version_core'".format(table = t_option)
+    cursor.execute(select_version_sql)
+    version = float(cursor.fetchone()[0][:3])
+    return version
+
 def check_tables(table_prefix):
     global cursor
     failed = []
@@ -128,7 +143,7 @@ def update_site_ts_created(site_id, date):
     select_site_sql = "SELECT ts_created from {SITE_TABLE} WHERE idsite = %s".format(SITE_TABLE = T_SITE)
     cursor.execute(select_site_sql, site_id)
     ts_created = cursor.fetchone()[0]
-    
+
     if ts_created > current_start:
         update_site_sql = "UPDATE {SITE_TABLE} SET ts_created = %s WHERE idsite = %s".format(SITE_TABLE = T_SITE)
         cursor.execute(update_site_sql, (current_start, site_id))
@@ -136,7 +151,7 @@ def update_site_ts_created(site_id, date):
 def nb_visits_day(date, site_id):
     cursor.execute(SELECT_NB_VISITS,(date, site_id))
     return cursor.fetchone()[0]
-    
+
 def update_visit_actions(start_date, end_date):
     raw_sql = """UPDATE {LV} AS lv
                         LEFT JOIN (
@@ -177,4 +192,3 @@ def clear_archives():
     if to_drop:
         raw_sql = 'DROP TABLE ' + (', ').join(to_drop)
         cursor.execute(raw_sql)
-    
