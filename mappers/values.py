@@ -33,18 +33,18 @@ def browser_name(name):
 
 def browser_version(browser, version):
     """ Function converts long version description i.e. 3.6.13 (Firefox) to 3.6 """
-    
+
     b_versions = {"FF" : lambda x : '.'.join(x.split('.')[:2]),
                   "CH" : lambda x : '.'.join(x.split('.')[:2])}
-    
+
     safari_webkit_versions = {"533.19.4" : "5.0.3", "533.18.5" : "5.0.2", "533.17.8" : "5.0.1",
                               "533.16" : "5.0", "531.22.7" : "4.0.5", "531.21.10" : "4.0.4",
                               "531.9.1" : "4.0.3", "530.19.1" : "4.0.2", "530.17" : "4.0.1",
                               "528.17" : "4.0", "528.16" : "4.0", "528.1.1" : "4.0"}
-    
+
     if browser == "SF":
         return safari_webkit_versions.get(version, "")
-    
+
     return b_versions.get(browser,(lambda x: x))(version)
 
 def os_name(name, type=None):
@@ -58,7 +58,7 @@ def os_name(name, type=None):
            "Android" : "AND",
            "SymbianOS" : "SYM",
            }
-    
+
     oss_typed = {"Windows" : {"Vista" : "WVI",
                               "Server 2003" : "WS3",
                               "XP" : "WXP",
@@ -69,12 +69,12 @@ def os_name(name, type=None):
                               "CE" : "WCE",
                               "ME" : "WME",
                               }}
-    
+
     if not oss.get(name):
         return oss_typed.get(name,{}).get(type,unknown)
     else:
         return oss[name]
-    
+
 def referer_keyword(keyword):
     return "" if keyword == "(not set)" else keyword
 
@@ -83,7 +83,7 @@ def referer_url(name):
         return ""
     elif name == "google":
         return name
-    else: 
+    else:
         return "http://%s/" % name
 
 def referer_type(source, keyword):
@@ -92,7 +92,7 @@ def referer_type(source, keyword):
     elif source == "google" or keyword != "":
         return REFERER_TYPE_SEARCH_ENGINE
     else:
-        return REFERER_TYPE_WEBSITE 
+        return REFERER_TYPE_WEBSITE
 
 def referer_name(source, type):
     if type == REFERER_TYPE_SEARCH_ENGINE:
@@ -116,13 +116,13 @@ def country_name(name):
         return country_codes[name].lower()
     except:
         return "xx"
-    
+
 def visitor_localtime(google_value):
     return "%s:00:00" % google_value
 
 def visitor_returning(google_value):
     return google_value == "Returning Visitor"
-    
+
 def flash_present(value):
     return value != "(not set)"
 

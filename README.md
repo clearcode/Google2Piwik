@@ -1,4 +1,4 @@
-Google2Piwik Exporter, version 1.4, October 2012
+Google2Piwik Exporter, version 1.5, February 2013
 
 Description
 ===========
@@ -30,8 +30,9 @@ Before running the script please be sure to:
 
 After export
 ============
-After successful export, please go to your Piwik installation folder 
-and run misc/cron/archive.sh script.
+After successful export, please go to your Piwik installation folder
+and run:
+/usr/bin/php5 /path/to/piwik/misc/cron/archive.php -- url=http://example.org/piwik/
 
 Limitations
 ===========

@@ -11,6 +11,7 @@ import MySQLdb
 import warnings
 import datetime
 
+
 warnings.filterwarnings("ignore", category=MySQLdb.Warning)
 
 T_LOGVA = "log_link_visit_action"
@@ -22,7 +23,7 @@ INSERT_LOG_VISIT_ACTION = """INSERT INTO {{LVA}} (idvisit, idvisitor, server_tim
                                                   idaction_url_ref, idaction_name, time_spent_ref_action, idaction_name_ref)
                                           VALUES (%s, binary(unhex(substring(%s,1,16))), %s, %s, %s, %s, %s, %s, 0) """
 
-INSERT_LOG_ACTION =    "INSERT INTO {{LA}} (name, hash, type) VALUES (%s, %s, %s) "
+
 LOGV_TEMPLATE = u""" INSERT INTO {{LV}} (idsite, visitor_localtime, idvisitor, visitor_returning, config_id,
                                                    visit_first_action_time, visit_last_action_time,
                                                    visit_exit_idaction_url, visit_entry_idaction_url, visit_total_actions,
@@ -51,7 +52,14 @@ INSERT_LOG_VISIT = {
     1.8: (", location_continent", "", ", %(location_continent)s", "")
 }
 
+INSERT_LOG_ACTION = {
+    1.8: "INSERT INTO {{LA}} (name, hash, type) VALUES (%s, %s, %s) ",
+    1.9: "INSERT INTO {{LA}} (name, hash, type, url_prefix) VALUES (%s, %s, %s, %s)"
+}
+
+
 SELECT_NB_VISITS = "SELECT count(*) FROM {{LV}} WHERE visitor_localtime = %s and idsite = %s"
+
 
 def initialize(mysql_data):
     global T_LOGVA, T_LOGA, T_LOGV, T_SITE
@@ -66,20 +74,26 @@ def initialize(mysql_data):
     T_SITE  = "%s_%s" % (prefix, T_SITE) if prefix else T_SITE
 
     INSERT_LOG_VISIT_ACTION = INSERT_LOG_VISIT_ACTION.replace("{{LVA}}", T_LOGVA)
-    INSERT_LOG_ACTION       = INSERT_LOG_ACTION.replace("{{LA}}", T_LOGA)
     SELECT_NB_VISITS        = SELECT_NB_VISITS.replace("{{LV}}", T_LOGV)
 
     LOGV_TEMPLATE = LOGV_TEMPLATE.replace("{{LV}}", T_LOGV)
     for k, v in INSERT_LOG_VISIT.iteritems():
         INSERT_LOG_VISIT[k] = LOGV_TEMPLATE.format(*INSERT_LOG_VISIT[k])
 
+    for k, v in INSERT_LOG_ACTION.iteritems():
+        INSERT_LOG_ACTION[k] = INSERT_LOG_ACTION[k].replace("{{LA}}", T_LOGA)
+
     db = init_db(mysql_data)
     db.set_character_set('utf8')
     cursor = db.cursor()
 
-def insert_log_action(values):
-    cursor.execute(INSERT_LOG_ACTION, values)
+
+def insert_log_action(values, version):
+    values_no = INSERT_LOG_ACTION[version].count('%s')
+    # from IPython import embed; embed();
+    cursor.execute(INSERT_LOG_ACTION[version], values[:values_no])
     return cursor.lastrowid
+
 
 def insert_log_visit(values, version):
     try:
@@ -88,9 +102,11 @@ def insert_log_visit(values, version):
         pass
     return cursor.lastrowid
 
+
 def insert_log_visit_action(values):
     cursor.execute(INSERT_LOG_VISIT_ACTION, values)
     return cursor.lastrowid
+
 
 def init_db(mysql_data):
     try:
@@ -102,24 +118,28 @@ def init_db(mysql_data):
         print "Exception: ", e
         exit()
 
+
 def test_db(mysql_data):
     global db, cursor
     db = MySQLdb.connect(mysql_data["host"], mysql_data["user"], mysql_data["passwd"],
-                             mysql_data["db"], int(mysql_data["port"]))
+                         mysql_data["db"], int(mysql_data["port"]))
     db.set_character_set('utf8')
     cursor = db.cursor()
 
+
 def get_sites(prefix):
-    select_site_sql = "SELECT idsite, name, main_url from {SITE_TABLE}".format(SITE_TABLE = prefix+"_"+T_SITE)
+    select_site_sql = "SELECT idsite, name, main_url from {SITE_TABLE}".format(SITE_TABLE=prefix + "_" + T_SITE)
     cursor.execute(select_site_sql)
-    return [{"id" : id, "name" : name, "url" : url} for (id, name, url) in cursor.fetchall()]
+    return [{"id": id, "name": name, "url": url} for (id, name, url) in cursor.fetchall()]
+
 
 def get_version(prefix):
     t_option = "%s_option" % (prefix) if prefix else "option"
-    select_version_sql = "SELECT option_value FROM {table} WHERE option_name = 'version_core'".format(table = t_option)
+    select_version_sql = "SELECT option_value FROM {table} WHERE option_name = 'version_core'".format(table=t_option)
     cursor.execute(select_version_sql)
-    version = float(cursor.fetchone()[0][:3])
+    version = cursor.fetchone()[0]
     return version
+
 
 def check_tables(table_prefix):
     global cursor
@@ -132,25 +152,29 @@ def check_tables(table_prefix):
             failed.append(table_name)
     return failed
 
+
 def check_site(site_id):
-    select_site_sql = "SELECT count(*) from {SITE_TABLE} WHERE idsite = %s".format(SITE_TABLE = T_SITE)
+    select_site_sql = "SELECT count(*) from {SITE_TABLE} WHERE idsite = %s".format(SITE_TABLE=T_SITE)
     cursor.execute(select_site_sql, site_id)
     return cursor.fetchone()[0] == 1
+
 
 def update_site_ts_created(site_id, date):
     current_start = datetime.datetime(date.year, date.month, date.day)
 
-    select_site_sql = "SELECT ts_created from {SITE_TABLE} WHERE idsite = %s".format(SITE_TABLE = T_SITE)
+    select_site_sql = "SELECT ts_created from {SITE_TABLE} WHERE idsite = %s".format(SITE_TABLE=T_SITE)
     cursor.execute(select_site_sql, site_id)
     ts_created = cursor.fetchone()[0]
 
     if ts_created > current_start:
-        update_site_sql = "UPDATE {SITE_TABLE} SET ts_created = %s WHERE idsite = %s".format(SITE_TABLE = T_SITE)
+        update_site_sql = "UPDATE {SITE_TABLE} SET ts_created = %s WHERE idsite = %s".format(SITE_TABLE=T_SITE)
         cursor.execute(update_site_sql, (current_start, site_id))
 
+
 def nb_visits_day(date, site_id):
-    cursor.execute(SELECT_NB_VISITS,(date, site_id))
+    cursor.execute(SELECT_NB_VISITS, (date, site_id))
     return cursor.fetchone()[0]
+
 
 def update_visit_actions(start_date, end_date):
     raw_sql = """UPDATE {LV} AS lv
@@ -165,8 +189,9 @@ def update_visit_actions(start_date, end_date):
                     SET lv.visit_total_actions = m.visit_actions
                     WHERE visit_last_action_time >= %s
                       AND visit_last_action_time <= %s
-                """.format(LV = T_LOGV, LVA = T_LOGVA)
+                """.format(LV=T_LOGV, LVA=T_LOGVA)
     cursor.execute(raw_sql, (start_date, end_date))
+
 
 def update_total_visit_actions():
     raw_sql = """UPDATE {LV} AS lv
@@ -179,8 +204,20 @@ def update_total_visit_actions():
                         ) AS m ON
                             m.idvisit = lv.idvisit
                     SET lv.visit_total_actions = m.visit_actions
-                """.format(LV = T_LOGV, LVA = T_LOGVA)
+                """.format(LV=T_LOGV, LVA=T_LOGVA)
     cursor.execute(raw_sql)
+
+
+def finalize():
+    raw_sql = """UPDATE {LV}
+                    SET visit_exit_idaction_name = visit_exit_idaction_url+1,
+                        visit_entry_idaction_name = visit_entry_idaction_url+1;""".format(LV=T_LOGV)
+    cursor.execute(raw_sql)
+
+    raw_sql = """UPDATE {LVA}
+                    SET idaction_name_ref = idaction_url_ref + 1;""".format(LVA=T_LOGVA)
+    cursor.execute(raw_sql)
+
 
 def clear_archives():
     query = cursor.execute('SHOW TABLES')
