@@ -1,4 +1,4 @@
-Google2Piwik Exporter, version 1.5, February 2013
+Google2Piwik Exporter, version 1.6, March 2013
 
 Description
 ===========

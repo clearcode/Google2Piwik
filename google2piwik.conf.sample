@@ -14,12 +14,12 @@ host = localhost
 port = 3306
 user = piwik
 passwd = password
-table_prefix = piwik
+table_prefix = piwik_
 
 # Set export date range
 [export]
 start = 2011-01-01
-end   =  
+end   =
 
 ## Piwik configuration of site.
 # For default Piwik installation with one website, site_id should be set to 1

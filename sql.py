@@ -68,10 +68,10 @@ def initialize(mysql_data):
     global SELECT_NB_VISITS
     global LOGV_TEMPLATE
     prefix = mysql_data["table_prefix"]
-    T_LOGVA = "%s_%s" % (prefix, T_LOGVA) if prefix else T_LOGVA
-    T_LOGA  = "%s_%s" % (prefix, T_LOGA) if prefix else T_LOGA
-    T_LOGV  = "%s_%s" % (prefix, T_LOGV) if prefix else T_LOGV
-    T_SITE  = "%s_%s" % (prefix, T_SITE) if prefix else T_SITE
+    T_LOGVA = "%s%s" % (prefix, T_LOGVA) if prefix else T_LOGVA
+    T_LOGA  = "%s%s" % (prefix, T_LOGA) if prefix else T_LOGA
+    T_LOGV  = "%s%s" % (prefix, T_LOGV) if prefix else T_LOGV
+    T_SITE  = "%s%s" % (prefix, T_SITE) if prefix else T_SITE
 
     INSERT_LOG_VISIT_ACTION = INSERT_LOG_VISIT_ACTION.replace("{{LVA}}", T_LOGVA)
     SELECT_NB_VISITS        = SELECT_NB_VISITS.replace("{{LV}}", T_LOGV)
@@ -90,7 +90,6 @@ def initialize(mysql_data):
 
 def insert_log_action(values, version):
     values_no = INSERT_LOG_ACTION[version].count('%s')
-    # from IPython import embed; embed();
     cursor.execute(INSERT_LOG_ACTION[version], values[:values_no])
     return cursor.lastrowid
 
@@ -128,13 +127,13 @@ def test_db(mysql_data):
 
 
 def get_sites(prefix):
-    select_site_sql = "SELECT idsite, name, main_url from {SITE_TABLE}".format(SITE_TABLE=prefix + "_" + T_SITE)
+    select_site_sql = "SELECT idsite, name, main_url from {SITE_TABLE}".format(SITE_TABLE=prefix + T_SITE)
     cursor.execute(select_site_sql)
     return [{"id": id, "name": name, "url": url} for (id, name, url) in cursor.fetchall()]
 
 
 def get_version(prefix):
-    t_option = "%s_option" % (prefix) if prefix else "option"
+    t_option = "%soption" % (prefix) if prefix else "option"
     select_version_sql = "SELECT option_value FROM {table} WHERE option_name = 'version_core'".format(table=t_option)
     cursor.execute(select_version_sql)
     version = cursor.fetchone()[0]
@@ -145,7 +144,7 @@ def check_tables(table_prefix):
     global cursor
     failed = []
     for table in ["log_action", "log_visit", "log_link_visit_action"]:
-        table_name = table if not table_prefix else "%s_%s" % (table_prefix, table)
+        table_name = table if not table_prefix else "%s%s" % (table_prefix, table)
         try:
             cursor.execute("SELECT * FROM {name}".format(name=table_name))
         except MySQLdb.ProgrammingError:
