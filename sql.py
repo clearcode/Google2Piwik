@@ -228,3 +228,9 @@ def clear_archives():
     if to_drop:
         raw_sql = 'DROP TABLE ' + (', ').join(to_drop)
         cursor.execute(raw_sql)
+
+
+def close():
+    global db
+    db.commit()
+    db.close()

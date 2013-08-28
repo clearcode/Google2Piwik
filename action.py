@@ -23,6 +23,8 @@ class Action(object):
         self.exported = False
         self.pageviews = 0
         self.timeleft = 0
+        self.id_action_name = 0
+        self.id_action_url = 0
 
     def __repr__(self):
         return str(self.titles)

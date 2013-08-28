@@ -665,4 +665,5 @@ if __name__ == '__main__':
         export_period(start_date, end_date)
 
         sql.clear_archives()
+        sql.close()
         print "Please go to your Piwik installation folder and run misc/cron/archive.sh script."
