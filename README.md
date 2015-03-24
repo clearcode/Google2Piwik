@@ -1,3 +1,9 @@
+DEPRECATED
+==========
+NOTE: This project is deprecated. We recommend importing webserver logs instead (http://piwik.org/log-analytics/).
+Please contact us at http://piwik.pro/contact if you need professional help.
+
+
 Google2Piwik Exporter, version 1.7, September 2013
 
 Description
